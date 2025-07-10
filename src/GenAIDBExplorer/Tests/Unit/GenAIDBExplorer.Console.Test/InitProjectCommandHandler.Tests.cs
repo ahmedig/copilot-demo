@@ -6,6 +6,7 @@ using GenAIDBExplorer.Core.Models.Project;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.CommandLine;
 
 namespace GenAIDBExplorer.Console.Test;
 
@@ -128,5 +129,35 @@ public class InitProjectCommandHandlerTests
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();
         _mockProject.Verify(p => p.InitializeProjectDirectory(It.IsAny<DirectoryInfo>()), Times.Never);
+    }
+
+    [TestMethod]
+    public async Task HandleAsync_WithParseResult_ShouldInitializeProjectDirectory_WhenProjectPathIsValid()
+    {
+        // Arrange
+        var projectPath = new DirectoryInfo(@"C:\ValidProjectPath");
+        
+        // Create a mock ParseResult that simulates System.CommandLine 2.0.0-beta5 behavior
+        var projectOption = new Option<DirectoryInfo>("--project", "Project path");
+        var rootCommand = new RootCommand();
+        rootCommand.AddOption(projectOption);
+        
+        // Parse the command line arguments to create a ParseResult
+        var parseResult = rootCommand.Parse(new[] { "--project", projectPath.FullName });
+
+        // Act
+        await _handler.HandleAsync(parseResult);
+
+        // Assert
+        _mockProject.Verify(p => p.InitializeProjectDirectory(projectPath), Times.Once);
+        
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Initializing project. '{projectPath.FullName}'")),
+                null,
+                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+            Times.Once);
     }
 }
