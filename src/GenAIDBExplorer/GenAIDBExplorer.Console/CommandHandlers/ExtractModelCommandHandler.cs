@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Resources;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
@@ -104,5 +105,20 @@ public class ExtractModelCommandHandler(
         await semanticModel.SaveModelAsync(semanticModelDirectory);
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("ExtractSemanticModelComplete"), projectPath.FullName);
+    }
+
+    /// <summary>
+    /// Extracts the command options from ParseResult for System.CommandLine 2.0.0-beta5 compatibility.
+    /// </summary>
+    /// <param name="parseResult">The parse result containing the parsed command-line arguments.</param>
+    /// <returns>The extracted command options.</returns>
+    protected override ExtractModelCommandHandlerOptions ExtractCommandOptions(ParseResult parseResult)
+    {
+        var projectPath = GetOptionValue<DirectoryInfo>(parseResult, "--project");
+        var skipTables = GetOptionValue<bool>(parseResult, "--skipTables");
+        var skipViews = GetOptionValue<bool>(parseResult, "--skipViews");
+        var skipStoredProcedures = GetOptionValue<bool>(parseResult, "--skipStoredProcedures");
+        
+        return new ExtractModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
     }
 }
