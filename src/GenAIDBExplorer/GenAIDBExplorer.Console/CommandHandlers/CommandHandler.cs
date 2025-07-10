@@ -10,10 +10,12 @@ using System.Resources;
 namespace GenAIDBExplorer.Console.CommandHandlers;
 
 /// <summary>
-/// Abstract base class for command handlers.
+/// Abstract base class for command handlers using System.CommandLine 2.0.0-beta5 API patterns.
 /// </summary>
 /// <remarks>
 /// This class provides common utility functionality for handling console commands.
+/// With System.CommandLine beta5, command handlers use ParseResult parameters
+/// and SetAction methods instead of the previous SetHandler patterns.
 /// </remarks>
 /// <remarks>
 /// Initializes a new instance of the <see cref="CommandHandler"/> class.

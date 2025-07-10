@@ -33,7 +33,7 @@ public class ExtractModelCommandHandler(
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(ExtractModelCommandHandler).Assembly);
 
     /// <summary>
-    /// Sets up the extract model command.
+    /// Sets up the extract model command using System.CommandLine 2.0.0-beta5 API patterns.
     /// </summary>
     /// <param name="host">The host instance.</param>
     /// <returns>The extract model command.</returns>
@@ -44,7 +44,7 @@ public class ExtractModelCommandHandler(
             description: "The path to the GenAI Database Explorer project."
         )
         {
-            IsRequired = true
+            Required = true  // Updated from IsRequired for beta5 compatibility
         };
 
         var skipTablesOption = new Option<bool>(
@@ -66,16 +66,22 @@ public class ExtractModelCommandHandler(
         );
 
         var extractModelCommand = new Command("extract-model", "Extract a semantic model from a SQL database for a GenAI Database Explorer project.");
-        extractModelCommand.AddOption(projectPathOption);
-        extractModelCommand.AddOption(skipTablesOption);
-        extractModelCommand.AddOption(skipViewsOption);
-        extractModelCommand.AddOption(skipStoredProceduresOption);
-        extractModelCommand.SetHandler(async (DirectoryInfo projectPath, bool skipTables, bool skipViews, bool skipStoredProcedures) =>
+        extractModelCommand.Options.Add(projectPathOption);  // Updated from AddOption for beta5 compatibility
+        extractModelCommand.Options.Add(skipTablesOption);
+        extractModelCommand.Options.Add(skipViewsOption);
+        extractModelCommand.Options.Add(skipStoredProceduresOption);
+        
+        extractModelCommand.SetAction(async (ParseResult parseResult) =>  // Updated from SetHandler for beta5 compatibility
         {
+            var projectPath = parseResult.GetValue(projectPathOption);
+            var skipTables = parseResult.GetValue(skipTablesOption);
+            var skipViews = parseResult.GetValue(skipViewsOption);
+            var skipStoredProcedures = parseResult.GetValue(skipStoredProceduresOption);
+            
             var handler = host.Services.GetRequiredService<ExtractModelCommandHandler>();
             var options = new ExtractModelCommandHandlerOptions(projectPath, skipTables, skipViews, skipStoredProcedures);
             await handler.HandleAsync(options);
-        }, projectPathOption, skipTablesOption, skipViewsOption, skipStoredProceduresOption);
+        });
 
         return extractModelCommand;
     }

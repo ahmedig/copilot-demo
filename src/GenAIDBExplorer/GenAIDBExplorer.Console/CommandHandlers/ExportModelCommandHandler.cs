@@ -41,7 +41,7 @@ public class ExportModelCommandHandler : CommandHandler<ExportModelCommandHandle
     }
 
     /// <summary>
-    /// Sets up the export-model command.
+    /// Sets up the export-model command using System.CommandLine 2.0.0-beta5 API patterns.
     /// </summary>
     /// <param name="host">The host instance.</param>
     /// <returns>The export-model command.</returns>
@@ -52,7 +52,7 @@ public class ExportModelCommandHandler : CommandHandler<ExportModelCommandHandle
             description: "The path to the GenAI Database Explorer project."
         )
         {
-            IsRequired = true
+            Required = true  // Updated from IsRequired for beta5 compatibility
         };
 
         var outputFileNameOption = new Option<string?>(
@@ -73,17 +73,22 @@ public class ExportModelCommandHandler : CommandHandler<ExportModelCommandHandle
         );
 
         var exportModelCommand = new Command("export-model", "Export the semantic model from a GenAI Database Explorer project.");
-        exportModelCommand.AddOption(projectPathOption);
-        exportModelCommand.AddOption(outputFileNameOption);
-        exportModelCommand.AddOption(fileTypeOption);
-        exportModelCommand.AddOption(splitFilesOption);
+        exportModelCommand.Options.Add(projectPathOption);  // Updated from AddOption for beta5 compatibility
+        exportModelCommand.Options.Add(outputFileNameOption);
+        exportModelCommand.Options.Add(fileTypeOption);
+        exportModelCommand.Options.Add(splitFilesOption);
 
-        exportModelCommand.SetHandler(async (DirectoryInfo projectPath, string? outputFileName, string fileType, bool splitFiles) =>
+        exportModelCommand.SetAction(async (ParseResult parseResult) =>  // Updated from SetHandler for beta5 compatibility
         {
+            var projectPath = parseResult.GetValue(projectPathOption);
+            var outputFileName = parseResult.GetValue(outputFileNameOption);
+            var fileType = parseResult.GetValue(fileTypeOption);
+            var splitFiles = parseResult.GetValue(splitFilesOption);
+            
             var handler = host.Services.GetRequiredService<ExportModelCommandHandler>();
             var options = new ExportModelCommandHandlerOptions(projectPath, outputFileName, fileType, splitFiles);
             await handler.HandleAsync(options);
-        }, projectPathOption, outputFileNameOption, fileTypeOption, splitFilesOption);
+        });
 
         return exportModelCommand;
     }

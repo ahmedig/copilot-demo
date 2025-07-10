@@ -35,7 +35,7 @@ public class QueryModelCommandHandler(
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(QueryModelCommandHandler).Assembly);
 
     /// <summary>
-    /// Sets up the query command.
+    /// Sets up the query command using System.CommandLine 2.0.0-beta5 API patterns.
     /// </summary>
     /// <param name="host">The host instance.</param>
     /// <returns>The query command.</returns>
@@ -46,17 +46,18 @@ public class QueryModelCommandHandler(
             description: "The path to the GenAI Database Explorer project."
         )
         {
-            IsRequired = true
+            Required = true  // Updated from IsRequired for beta5 compatibility
         };
 
         var queryCommand = new Command("query-model", "Answer questions based on the semantic model by using Generative AI.");
-        queryCommand.AddOption(projectPathOption);
-        queryCommand.SetHandler(async (DirectoryInfo projectPath) =>
+        queryCommand.Options.Add(projectPathOption);  // Updated from AddOption for beta5 compatibility
+        queryCommand.SetAction(async (ParseResult parseResult) =>  // Updated from SetHandler for beta5 compatibility
         {
+            var projectPath = parseResult.GetValue(projectPathOption);
             var handler = host.Services.GetRequiredService<QueryModelCommandHandler>();
             var options = new QueryModelCommandHandlerOptions(projectPath);
             await handler.HandleAsync(options);
-        }, projectPathOption);
+        });
 
         return queryCommand;
     }

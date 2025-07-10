@@ -40,7 +40,7 @@ public class DataDictionaryCommandHandler(
     private readonly IDataDictionaryProvider _dataDictionaryProvider = serviceProvider.GetRequiredService<IDataDictionaryProvider>();
 
     /// <summary>
-    /// Sets up the data-dictionary command.
+    /// Sets up the data-dictionary command using System.CommandLine 2.0.0-beta5 API patterns.
     /// </summary>
     /// <param name="host">The host instance.</param>
     /// <returns>The data-dictionary command.</returns>
@@ -51,7 +51,7 @@ public class DataDictionaryCommandHandler(
             description: "The path to the GenAI Database Explorer project."
         )
         {
-            IsRequired = true
+            Required = true  // Updated from IsRequired for beta5 compatibility
         };
 
         var sourcePathOption = new Option<string>(
@@ -59,7 +59,7 @@ public class DataDictionaryCommandHandler(
             description: "The path to the source directory containing data dictionary files. Supports file masks."
         )
         {
-            IsRequired = true
+            Required = true  // Updated from IsRequired for beta5 compatibility
         };
 
         var schemaNameOption = new Option<string>(
@@ -67,7 +67,7 @@ public class DataDictionaryCommandHandler(
             description: "The schema name of the object to process."
         )
         {
-            ArgumentHelpName = "schemaName"
+            HelpName = "schemaName"  // Updated from ArgumentHelpName for beta5 compatibility
         };
 
         var nameOption = new Option<string>(
@@ -75,7 +75,7 @@ public class DataDictionaryCommandHandler(
             description: "The name of the object to process."
         )
         {
-            ArgumentHelpName = "name"
+            HelpName = "name"  // Updated from ArgumentHelpName for beta5 compatibility
         };
 
         var showOption = new Option<bool>(
@@ -84,21 +84,24 @@ public class DataDictionaryCommandHandler(
             getDefaultValue: () => false
         );
 
-        var dataDictionaryCommand = new Command("data-dictionary", "Process data dictionary files and update the semantic model.")
-        {
-            projectPathOption
-        };
+        var dataDictionaryCommand = new Command("data-dictionary", "Process data dictionary files and update the semantic model.");
+        dataDictionaryCommand.Options.Add(projectPathOption);  // Updated from AddOption for beta5 compatibility
 
-        var tableCommand = new Command("table", "Process table data dictionary files.")
+        var tableCommand = new Command("table", "Process table data dictionary files.");
+        tableCommand.Options.Add(projectPathOption);
+        tableCommand.Options.Add(sourcePathOption);
+        tableCommand.Options.Add(schemaNameOption);
+        tableCommand.Options.Add(nameOption);
+        tableCommand.Options.Add(showOption);
+        
+        tableCommand.SetAction(async (ParseResult parseResult) =>  // Updated from SetHandler for beta5 compatibility
         {
-            projectPathOption,
-            sourcePathOption,
-            schemaNameOption,
-            nameOption,
-            showOption
-        };
-        tableCommand.SetHandler(async (DirectoryInfo projectPath, string sourcePathPattern, string schemaName, string name, bool show) =>
-        {
+            var projectPath = parseResult.GetValue(projectPathOption);
+            var sourcePathPattern = parseResult.GetValue(sourcePathOption);
+            var schemaName = parseResult.GetValue(schemaNameOption);
+            var name = parseResult.GetValue(nameOption);
+            var show = parseResult.GetValue(showOption);
+            
             var handler = host.Services.GetRequiredService<DataDictionaryCommandHandler>();
             var options = new DataDictionaryCommandHandlerOptions(
                 projectPath,
@@ -109,9 +112,9 @@ public class DataDictionaryCommandHandler(
                 show: show
             );
             await handler.HandleAsync(options);
-        }, projectPathOption, sourcePathOption, schemaNameOption, nameOption, showOption);
+        });
 
-        dataDictionaryCommand.AddCommand(tableCommand);
+        dataDictionaryCommand.Subcommands.Add(tableCommand);  // Updated from AddCommand for beta5 compatibility
 
         return dataDictionaryCommand;
     }

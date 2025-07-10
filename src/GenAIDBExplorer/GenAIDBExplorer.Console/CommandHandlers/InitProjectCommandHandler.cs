@@ -33,7 +33,7 @@ public class InitProjectCommandHandler(
     private static readonly ResourceManager _resourceManagerLogMessages = new("GenAIDBExplorer.Console.Resources.LogMessages", typeof(InitProjectCommandHandler).Assembly);
 
     /// <summary>
-    /// Sets up the init-project command.
+    /// Sets up the init-project command using System.CommandLine 2.0.0-beta5 API patterns.
     /// </summary>
     /// <param name="host">The host instance.</param>
     /// <returns>The init-project command.</returns>
@@ -44,17 +44,18 @@ public class InitProjectCommandHandler(
             description: "The path to the GenAI Database Explorer project."
         )
         {
-            IsRequired = true
+            Required = true  // Updated from IsRequired for beta5 compatibility
         };
 
         var initCommand = new Command("init-project", "Initialize a GenAI Database Explorer project.");
-        initCommand.AddOption(projectPathOption);
-        initCommand.SetHandler(async (DirectoryInfo projectPath) =>
+        initCommand.Options.Add(projectPathOption);  // Updated from AddOption for beta5 compatibility
+        initCommand.SetAction(async (ParseResult parseResult) =>  // Updated from SetHandler for beta5 compatibility
         {
+            var projectPath = parseResult.GetValue(projectPathOption);
             var handler = host.Services.GetRequiredService<InitProjectCommandHandler>();
             var options = new InitProjectCommandHandlerOptions(projectPath);
             await handler.HandleAsync(options);
-        }, projectPathOption);
+        });
 
         return initCommand;
     }
