@@ -1,14 +1,5 @@
 # Generative AI Database Explorer
 
-[![Continuous Integration][continuous-integration-shield]][continuous-integration-url]
-[![Continuous Delivery][continuous-delivery-shield]][continuous-delivery-url]
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
-
 With **Generative AI Database Explorer**, you can explore your database schema and stored procedures using Generative AI. This tool helps you understand your database schema and stored procedures by generating SQL queries based on the schema and explaining the schema and stored procedures in the database to the user based on the stored schema.
 
 Although there are many other tools available that perform similar functions, this tool produces a **semantic model** of the database schema, combined with a data dictionary and enriched using Generative AI.
