@@ -11,7 +11,7 @@ namespace GenAIDBExplorer.Console;
 internal static class Program
 {
     /// <summary>
-    /// The main method that sets up and runs the application.
+    /// The main method that sets up and runs the application using System.CommandLine 2.0.0-beta5 API patterns.
     /// </summary>
     /// <param name="args">The command-line arguments.</param>
     private static async Task Main(string[] args)
@@ -24,14 +24,14 @@ internal static class Program
             .ConfigureHost(args)
             .Build();
 
-        // Set up commands
-        rootCommand.AddCommand(InitProjectCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(DataDictionaryCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(EnrichModelCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(ExportModelCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(ExtractModelCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(QueryModelCommandHandler.SetupCommand(host));
-        rootCommand.AddCommand(ShowObjectCommandHandler.SetupCommand(host));
+        // Set up commands using new beta5 mutable collections API
+        rootCommand.Subcommands.Add(InitProjectCommandHandler.SetupCommand(host));  // Updated from AddCommand for beta5 compatibility
+        rootCommand.Subcommands.Add(DataDictionaryCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(EnrichModelCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(ExportModelCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(ExtractModelCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(QueryModelCommandHandler.SetupCommand(host));
+        rootCommand.Subcommands.Add(ShowObjectCommandHandler.SetupCommand(host));
 
         // Invoke the root command
         await rootCommand.InvokeAsync(args);
