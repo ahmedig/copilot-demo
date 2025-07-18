@@ -47,71 +47,80 @@ public class DataDictionaryCommandHandler(
     public static Command SetupCommand(IHost host)
     {
         var projectPathOption = new Option<DirectoryInfo>(
-            aliases: ["--project", "-p"],
-            description: "The path to the GenAI Database Explorer project."
+            "--project",
+            "-p"
         )
         {
-            IsRequired = true
+            Description = "The path to the GenAI Database Explorer project.",
+            Required = true
         };
 
         var sourcePathOption = new Option<string>(
-            aliases: ["--source-path", "-d"],
-            description: "The path to the source directory containing data dictionary files. Supports file masks."
+            "--source-path",
+            "-d"
         )
         {
-            IsRequired = true
+            Description = "The path to the source directory containing data dictionary files. Supports file masks.",
+            Required = true
         };
 
         var schemaNameOption = new Option<string>(
-            aliases: ["--schema", "-s"],
-            description: "The schema name of the object to process."
+            "--schema",
+            "-s"
         )
         {
-            ArgumentHelpName = "schemaName"
+            Description = "The schema name of the object to process.",
+            HelpName = "schemaName"
         };
 
         var nameOption = new Option<string>(
-            aliases: ["--name", "-n"],
-            description: "The name of the object to process."
+            "--name",
+            "-n"
         )
         {
-            ArgumentHelpName = "name"
+            Description = "The name of the object to process.",
+            HelpName = "name"
         };
 
         var showOption = new Option<bool>(
-            aliases: ["--show"],
-            description: "Display the entity after processing.",
-            getDefaultValue: () => false
-        );
-
-        var dataDictionaryCommand = new Command("data-dictionary", "Process data dictionary files and update the semantic model.")
+            "--show"
+        )
         {
-            projectPathOption
+            Description = "Display the entity after processing.",
+            DefaultValueFactory = (_) => false
         };
 
-        var tableCommand = new Command("table", "Process table data dictionary files.")
+        var dataDictionaryCommand = new Command("data-dictionary", "Process data dictionary files and update the semantic model.");
+        dataDictionaryCommand.Options.Add(projectPathOption);
+
+        var tableCommand = new Command("table", "Process table data dictionary files.");
+        tableCommand.Options.Add(projectPathOption);
+        tableCommand.Options.Add(sourcePathOption);
+        tableCommand.Options.Add(schemaNameOption);
+        tableCommand.Options.Add(nameOption);
+        tableCommand.Options.Add(showOption);
+        
+        tableCommand.SetAction(async (ParseResult parseResult) =>
         {
-            projectPathOption,
-            sourcePathOption,
-            schemaNameOption,
-            nameOption,
-            showOption
-        };
-        tableCommand.SetHandler(async (DirectoryInfo projectPath, string sourcePathPattern, string schemaName, string name, bool show) =>
-        {
+            var projectPath = parseResult.GetValue(projectPathOption);
+            var sourcePathPattern = parseResult.GetValue(sourcePathOption);
+            var schemaName = parseResult.GetValue(schemaNameOption);
+            var name = parseResult.GetValue(nameOption);
+            var show = parseResult.GetValue(showOption);
+            
             var handler = host.Services.GetRequiredService<DataDictionaryCommandHandler>();
             var options = new DataDictionaryCommandHandlerOptions(
-                projectPath,
-                sourcePathPattern,
+                projectPath!,
+                sourcePathPattern!,
                 objectType: "table",
                 schemaName: schemaName,
                 objectName: name,
                 show: show
             );
             await handler.HandleAsync(options);
-        }, projectPathOption, sourcePathOption, schemaNameOption, nameOption, showOption);
+        });
 
-        dataDictionaryCommand.AddCommand(tableCommand);
+        dataDictionaryCommand.Subcommands.Add(tableCommand);
 
         return dataDictionaryCommand;
     }

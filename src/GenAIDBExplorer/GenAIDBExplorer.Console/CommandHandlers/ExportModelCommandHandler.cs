@@ -48,42 +48,57 @@ public class ExportModelCommandHandler : CommandHandler<ExportModelCommandHandle
     public static Command SetupCommand(IHost host)
     {
         var projectPathOption = new Option<DirectoryInfo>(
-            aliases: new[] { "--project", "-p" },
-            description: "The path to the GenAI Database Explorer project."
+            "--project",
+            "-p"
         )
         {
-            IsRequired = true
+            Description = "The path to the GenAI Database Explorer project.",
+            Required = true
         };
 
         var outputFileNameOption = new Option<string?>(
-            aliases: ["--outputFileName", "-o"],
-            description: "The path to the output file."
-        );
+            "--outputFileName",
+            "-o"
+        )
+        {
+            Description = "The path to the output file."
+        };
 
         var fileTypeOption = new Option<string>(
-            aliases: ["--fileType", "-f"],
-            description: "The type of the output files. Defaults to 'markdown'.",
-            getDefaultValue: () => "markdown"
-        );
+            "--fileType",
+            "-f"
+        )
+        {
+            Description = "The type of the output files. Defaults to 'markdown'.",
+            DefaultValueFactory = (_) => "markdown"
+        };
 
         var splitFilesOption = new Option<bool>(
-            aliases: ["--splitFiles", "-s"],
-            description: "Flag to split the export into individual files per entity.",
-            getDefaultValue: () => false
-        );
+            "--splitFiles",
+            "-s"
+        )
+        {
+            Description = "Flag to split the export into individual files per entity.",
+            DefaultValueFactory = (_) => false
+        };
 
         var exportModelCommand = new Command("export-model", "Export the semantic model from a GenAI Database Explorer project.");
-        exportModelCommand.AddOption(projectPathOption);
-        exportModelCommand.AddOption(outputFileNameOption);
-        exportModelCommand.AddOption(fileTypeOption);
-        exportModelCommand.AddOption(splitFilesOption);
+        exportModelCommand.Options.Add(projectPathOption);
+        exportModelCommand.Options.Add(outputFileNameOption);
+        exportModelCommand.Options.Add(fileTypeOption);
+        exportModelCommand.Options.Add(splitFilesOption);
 
-        exportModelCommand.SetHandler(async (DirectoryInfo projectPath, string? outputFileName, string fileType, bool splitFiles) =>
+        exportModelCommand.SetAction(async (ParseResult parseResult) =>
         {
+            var projectPath = parseResult.GetValue(projectPathOption);
+            var outputFileName = parseResult.GetValue(outputFileNameOption);
+            var fileType = parseResult.GetValue(fileTypeOption);
+            var splitFiles = parseResult.GetValue(splitFilesOption);
+            
             var handler = host.Services.GetRequiredService<ExportModelCommandHandler>();
-            var options = new ExportModelCommandHandlerOptions(projectPath, outputFileName, fileType, splitFiles);
+            var options = new ExportModelCommandHandlerOptions(projectPath!, outputFileName, fileType!, splitFiles);
             await handler.HandleAsync(options);
-        }, projectPathOption, outputFileNameOption, fileTypeOption, splitFilesOption);
+        });
 
         return exportModelCommand;
     }
