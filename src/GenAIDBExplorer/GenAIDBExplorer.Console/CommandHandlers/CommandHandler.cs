@@ -5,6 +5,8 @@ using GenAIDBExplorer.Core.Models.SemanticModel;
 using GenAIDBExplorer.Core.SemanticModelProviders;
 using GenAIDBExplorer.Core.SemanticProviders;
 using Microsoft.Extensions.Logging;
+using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Resources;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
@@ -65,6 +67,30 @@ public abstract class CommandHandler<TOptions>(
     /// </summary>
     /// <param name="commandOptions">The command options that were provided to the command.</param>
     public abstract Task HandleAsync(TOptions commandOptions);
+
+    /// <summary>
+    /// Handles the command using ParseResult for System.CommandLine 2.0.0-beta5 compatibility.
+    /// This method extracts the options from ParseResult and calls the strongly-typed HandleAsync method.
+    /// </summary>
+    /// <param name="parseResult">The parse result containing the parsed command-line arguments.</param>
+    public virtual Task HandleAsync(ParseResult parseResult)
+    {
+        var commandOptions = ExtractCommandOptions(parseResult);
+        return HandleAsync(commandOptions);
+    }
+
+    /// <summary>
+    /// Extracts the command options from ParseResult. 
+    /// Derived classes should override this method to extract their specific option types.
+    /// </summary>
+    /// <param name="parseResult">The parse result containing the parsed command-line arguments.</param>
+    /// <returns>The extracted command options.</returns>
+    protected virtual TOptions ExtractCommandOptions(ParseResult parseResult)
+    {
+        throw new NotImplementedException(
+            $"Command handler {GetType().Name} must override ExtractCommandOptions method " +
+            "to support ParseResult-based handling for System.CommandLine 2.0.0-beta5 compatibility.");
+    }
 
     /// <summary>
     /// Asserts that the command options and its properties are valid.
@@ -192,5 +218,40 @@ public abstract class CommandHandler<TOptions>(
             OutputInformation(storedProcedure.ToString());
         }
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Utility method to extract the value of an option from ParseResult.
+    /// </summary>
+    /// <typeparam name="T">The type of the option value.</typeparam>
+    /// <param name="parseResult">The parse result containing the parsed command-line arguments.</param>
+    /// <param name="option">The option to extract the value for.</param>
+    /// <returns>The extracted option value.</returns>
+    protected static T GetOptionValue<T>(ParseResult parseResult, Option<T> option)
+    {
+        return parseResult.GetValue(option);
+    }
+
+    /// <summary>
+    /// Utility method to extract the value of an option from ParseResult by name.
+    /// </summary>
+    /// <typeparam name="T">The type of the option value.</typeparam>
+    /// <param name="parseResult">The parse result containing the parsed command-line arguments.</param>
+    /// <param name="optionName">The name of the option to extract the value for.</param>
+    /// <returns>The extracted option value.</returns>
+    protected static T GetOptionValue<T>(ParseResult parseResult, string optionName)
+    {
+        return parseResult.GetValue<T>(optionName);
+    }
+
+    /// <summary>
+    /// Utility method to check if an option was provided in the command line.
+    /// </summary>
+    /// <param name="parseResult">The parse result containing the parsed command-line arguments.</param>
+    /// <param name="option">The option to check.</param>
+    /// <returns>True if the option was provided, false otherwise.</returns>
+    protected static bool HasOption(ParseResult parseResult, Option option)
+    {
+        return parseResult.FindResultFor(option) != null;
     }
 }

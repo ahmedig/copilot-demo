@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Resources;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
@@ -75,5 +76,16 @@ public class QueryModelCommandHandler(
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("QueryingProject"), projectPath.FullName);
 
         await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Extracts the command options from ParseResult for System.CommandLine 2.0.0-beta5 compatibility.
+    /// </summary>
+    /// <param name="parseResult">The parse result containing the parsed command-line arguments.</param>
+    /// <returns>The extracted command options.</returns>
+    protected override QueryModelCommandHandlerOptions ExtractCommandOptions(ParseResult parseResult)
+    {
+        var projectPath = GetOptionValue<DirectoryInfo>(parseResult, "--project");
+        return new QueryModelCommandHandlerOptions(projectPath);
     }
 }

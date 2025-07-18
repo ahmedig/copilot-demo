@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Resources;
 
 namespace GenAIDBExplorer.Console.CommandHandlers;
@@ -86,5 +87,17 @@ public class InitProjectCommandHandler(
 
         _logger.LogInformation("{Message} '{ProjectPath}'", _resourceManagerLogMessages.GetString("InitializeProjectComplete"), projectPath.FullName);
         await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Extracts the command options from ParseResult for System.CommandLine 2.0.0-beta5 compatibility.
+    /// </summary>
+    /// <param name="parseResult">The parse result containing the parsed command-line arguments.</param>
+    /// <returns>The extracted command options.</returns>
+    protected override InitProjectCommandHandlerOptions ExtractCommandOptions(ParseResult parseResult)
+    {
+        // For init-project command, we expect a --project option
+        var projectPath = GetOptionValue<DirectoryInfo>(parseResult, "--project");
+        return new InitProjectCommandHandlerOptions(projectPath);
     }
 }
